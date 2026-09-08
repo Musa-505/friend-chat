@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# База данных и логи
+friendchat.db
+friendchat.db-wal
+friendchat.db-shm
+*.log
+
+# Локальная конфигурация
+~/.friend/
