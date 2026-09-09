@@ -5,7 +5,8 @@ set -e
 
 SERVER="http://34.63.224.169:8001"
 DIR="$HOME/friend-chat"
-REPO="https://raw.githubusercontent.com/Musa-505/friend-chat/main"
+API="https://api.github.com/repos/Musa-505/friend-chat/contents"
+GH_HEADERS=(-H "Accept: application/vnd.github.raw" -H "User-Agent: friend-chat")
 
 echo "🚀 Friend Chat орнатылуда..."
 
@@ -28,8 +29,8 @@ echo "✅ Python: $($PY --version 2>&1)"
 
 # 2. friend.py + daemon.py жүктеу
 mkdir -p "$DIR"
-curl -sL -o "$DIR/friend.py" "$REPO/friend.py"
-curl -sL -o "$DIR/daemon.py" "$REPO/daemon.py"
+curl -sL "${GH_HEADERS[@]}" -o "$DIR/friend.py" "$API/friend.py"
+curl -sL "${GH_HEADERS[@]}" -o "$DIR/daemon.py" "$API/daemon.py"
 
 # 3. Сервер адресін орнату
 "$PY" "$DIR/friend.py" config "$SERVER" >/dev/null
@@ -47,7 +48,7 @@ fi
 if [ -d "$HOME/.claude" ]; then
   mkdir -p "$HOME/.claude/commands"
   for cmd in friend msg inbox listen; do
-    curl -sL -o "$HOME/.claude/commands/$cmd.md" "$REPO/.claude/commands/$cmd.md"
+    curl -sL "${GH_HEADERS[@]}" -o "$HOME/.claude/commands/$cmd.md" "$API/.claude/commands/$cmd.md"
   done
   echo "✅ Claude Code командалары қосылды: /friend /msg /inbox /listen"
   echo "   (Claude Code-ты қайта іске қосқанда қолжетімді болады)"

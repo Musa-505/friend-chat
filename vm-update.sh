@@ -1,21 +1,21 @@
 #!/bin/bash
 # Friend Chat — VM авто-жаңарту (GitHub-тан тартып алады)
 # Cron: */5 * * * * /opt/friend-chat/vm-update.sh
-REPO="https://raw.githubusercontent.com/Musa-505/friend-chat/main"
+API="https://api.github.com/repos/Musa-505/friend-chat/contents"
 DIR="/opt/friend-chat"
 CHANGED=0
 
 cd "$DIR" || exit 1
 
 # server.py
-curl -sL -o /tmp/fc-server.py "$REPO/server.py"
+curl -sL -H "Accept: application/vnd.github.raw" -H "User-Agent: friend-chat" -o /tmp/fc-server.py "$API/server.py"
 if ! cmp -s /tmp/fc-server.py server.py; then
   cp /tmp/fc-server.py server.py
   CHANGED=1
 fi
 
 # web/index.html
-curl -sL -o /tmp/fc-index.html "$REPO/web/index.html"
+curl -sL -H "Accept: application/vnd.github.raw" -H "User-Agent: friend-chat" -o /tmp/fc-index.html "$API/web/index.html"
 if ! cmp -s /tmp/fc-index.html web/index.html; then
   cp /tmp/fc-index.html web/index.html
   CHANGED=1

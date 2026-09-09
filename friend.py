@@ -23,7 +23,6 @@ CONFIG_DIR = os.path.expanduser("~/.friend")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 DEFAULT_SERVER = "http://localhost:8001"
 VERSION = "1.1.0"
-REPO_RAW = "https://raw.githubusercontent.com/Musa-505/friend-chat/main"
 UPDATE_CACHE = os.path.join(CONFIG_DIR, ".update_check")
 
 
@@ -71,6 +70,17 @@ def api(method, path, data=None, token=None):
 
 
 # ---------------------------------------------------------------- update
+def fetch_github_file(fname):
+    """GitHub API арқылы файлды жүктеу (raw CDN кэшінен сенімді)."""
+    url = f"https://api.github.com/repos/Musa-505/friend-chat/contents/{fname}"
+    req = urllib.request.Request(url, headers={
+        "User-Agent": "friend-chat",
+        "Accept": "application/vnd.github.raw",
+    })
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        return resp.read()
+
+
 def check_update(force=False):
     """GitHub-та жаңа нұсқа бар ма? (сағатына бір рет тексереді)"""
     if not force and os.path.exists(UPDATE_CACHE):
@@ -80,8 +90,7 @@ def check_update(force=False):
         except Exception:
             pass
     try:
-        with urllib.request.urlopen(REPO_RAW + "/friend.py", timeout=10) as resp:
-            content = resp.read().decode()
+        content = fetch_github_file("friend.py").decode()
         m = re.search(r'VERSION\s*=\s*"([^"]+)"', content)
         latest = m.group(1) if m else None
     except Exception:
@@ -102,8 +111,7 @@ def do_update():
     ok = True
     for fname in ("friend.py", "daemon.py"):
         try:
-            with urllib.request.urlopen(REPO_RAW + "/" + fname, timeout=15) as resp:
-                data = resp.read()
+            data = fetch_github_file(fname)
             path = os.path.join(base, fname)
             tmp = path + ".tmp"
             with open(tmp, "wb") as f:
