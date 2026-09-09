@@ -56,9 +56,27 @@ python3 ~/code/friend-chat/friend.py inbox
 3. Сіз `/friend add <дос_id>` арқылы, досыңыз сізді өз браузерінде қосады
 4. Хат жазысасыздар
 
-## Серверді басқа машинаға көшіру
+## Онлайн сервер (gcloud)
 
-Сервер кез келген жерде жұмыс істей алады (VDS, Docker). Тек:
-- `server.py`-ді іске қосыңыз (порт 8000)
+Сервер **https://github.com/Musa-505/friend-chat** жобасынан gcloud Compute Engine-ге орнатылған:
+
+- **Адрес**: `http://34.63.224.169:8001` (статикалық IP)
+- **VM**: `friend-chat` (e2-micro, us-central1-a, free tier)
+- **Сервис**: systemd `friend-chat.service`, автоматты қайта іске қосу
+- **Деректер**: SQLite `/opt/friend-chat/friendchat.db` (тұрақты диск)
+
+Достарға сілтеме: **http://34.63.224.169:8001** — браузерден ашылады, тіркеледі, хат жазысады.
+
+### Клиентті онлайн серверге бағыттау
+
+```bash
+python3 ~/code/friend-chat/friend.py config http://34.63.224.169:8001
+python3 ~/code/friend-chat/friend.py register <имя>
+```
+
+### Серверді басқа машинаға көшіру
+
+Сервер кез келген жерде жұмыс істей алады (VDS, Docker, gcloud). Тек:
+- `server.py`-ді іске қосыңыз (порт 8001)
 - Клиенттерде сервер адресін өзгертіңіз: `friend.py config https://your-server`
 - Веб-чат сол адресте ашылады
