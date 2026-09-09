@@ -3,8 +3,12 @@
 Сделай следующее:
 
 1. Запусти daemon в фоне (Bash с run_in_background):
-   ```
-   python3 ~/code/friend-chat/daemon.py
+   ```bash
+   DAEMON_PY=""
+   for p in "$HOME/friend-chat/daemon.py" "$HOME/code/friend-chat/daemon.py"; do
+     [ -f "$p" ] && DAEMON_PY="$p" && break
+   done
+   python3 "$DAEMON_PY"
    ```
 2. Настрой Monitor для отслеживания новых сообщений:
    ```

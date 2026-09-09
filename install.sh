@@ -26,9 +26,10 @@ if [ -z "$PY" ]; then
 fi
 echo "✅ Python: $($PY --version 2>&1)"
 
-# 2. friend.py жүктеу
+# 2. friend.py + daemon.py жүктеу
 mkdir -p "$DIR"
 curl -sL -o "$DIR/friend.py" "$REPO/friend.py"
+curl -sL -o "$DIR/daemon.py" "$REPO/daemon.py"
 
 # 3. Сервер адресін орнату
 "$PY" "$DIR/friend.py" config "$SERVER" >/dev/null
@@ -42,7 +43,19 @@ if [ -n "$SHELL_RC" ] && ! grep -q "alias friend=" "$SHELL_RC" 2>/dev/null; then
   echo "✅ 'friend' командасы қосылды ($SHELL_RC)"
 fi
 
-# 5. Тіркелу
+# 5. Claude Code командаларын орнату (/friend, /msg, /inbox, /listen)
+if [ -d "$HOME/.claude" ]; then
+  mkdir -p "$HOME/.claude/commands"
+  for cmd in friend msg inbox listen; do
+    curl -sL -o "$HOME/.claude/commands/$cmd.md" "$REPO/.claude/commands/$cmd.md"
+  done
+  echo "✅ Claude Code командалары қосылды: /friend /msg /inbox /listen"
+  echo "   (Claude Code-ты қайта іске қосқанда қолжетімді болады)"
+else
+  echo "ℹ️ Claude Code табылмады — CLI командалары ғана орнатылды."
+fi
+
+# 6. Тіркелу
 echo ""
 echo "Атыңызды жазыңыз (мысалы: Айбек):"
 read -r NAME < /dev/tty

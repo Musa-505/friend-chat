@@ -2,8 +2,12 @@
 
 Выполни команду и покажи результат пользователю:
 
-```
-python3 ~/code/friend-chat/friend.py $ARGUMENTS
+```bash
+FRIEND_PY=""
+for p in "$HOME/friend-chat/friend.py" "$HOME/code/friend-chat/friend.py"; do
+  [ -f "$p" ] && FRIEND_PY="$p" && break
+done
+python3 "$FRIEND_PY" $ARGUMENTS
 ```
 
 Доступные подкоманды:
