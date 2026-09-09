@@ -55,11 +55,17 @@ else
   echo "ℹ️ Claude Code табылмады — CLI командалары ғана орнатылды."
 fi
 
-# 6. Тіркелу
-echo ""
-echo "Атыңызды жазыңыз (мысалы: Айбек):"
-read -r NAME < /dev/tty
-"$PY" "$DIR/friend.py" register "$NAME"
+# 6. Тіркелу (егер әлі тіркелмеген болса)
+if [ -f "$HOME/.friend/config.json" ] && grep -q '"user_id"' "$HOME/.friend/config.json" 2>/dev/null; then
+  echo ""
+  echo "✅ Сіз бұрыннан тіркелгенсіз:"
+  "$PY" "$DIR/friend.py" whoami
+else
+  echo ""
+  echo "Атыңызды жазыңыз (мысалы: Айбек):"
+  read -r NAME < /dev/tty
+  "$PY" "$DIR/friend.py" register "$NAME"
+fi
 
 echo ""
 echo "=============================================="
