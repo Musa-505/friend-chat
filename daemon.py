@@ -95,6 +95,12 @@ async def run():
                     if msg.get("type") == "message":
                         log_line(format_msg(msg))
                         write_last_id(msg["id"])
+        except websockets.exceptions.InvalidStatus as e:
+            if e.response.status_code == 403:
+                print("❌ Токен жарамсыз. Қайта тіркеліңіз: friend.py register <имя>", file=sys.stderr)
+                return
+            print(f"⚠️ Сервер қатесі ({e.response.status_code}). Қайта қосылу 5с...", file=sys.stderr)
+            await asyncio.sleep(5)
         except (websockets.ConnectionClosed, OSError) as e:
             print(f"⚠️ Соединение потеряно ({e}). Переподключение через 5с...", file=sys.stderr)
             await asyncio.sleep(5)

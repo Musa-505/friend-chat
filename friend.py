@@ -57,6 +57,8 @@ def api(method, path, data=None, token=None):
             detail = json.loads(e.read().decode()).get("detail", str(e))
         except Exception:
             detail = str(e)
+        if e.code == 401:
+            sys.exit(f"Ошибка: {detail}\nҚайта тіркеліңіз: friend.py register <имя>")
         sys.exit(f"Ошибка: {detail}")
     except urllib.error.URLError as e:
         sys.exit(f"Не удалось подключиться к серверу ({server_url()}). "

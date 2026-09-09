@@ -143,9 +143,20 @@ async function api(method, path, data) {
     method, headers: { 'Content-Type': 'application/json', 'X-Token': state.token || '' },
     body: data ? JSON.stringify(data) : undefined
   });
+  if (res.status === 401) { handleAuthFail('Сессия мерзімі өтті. Қайта кіріңіз.'); throw new Error('Сессия мерзімі өтті'); }
   const j = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(j.detail || 'Ошибка');
   return j;
+}
+
+// жарамсыз токен (аккаунт жойылған/өзгерген) — ескі сессияны тазалап, кіруге шақырады
+function handleAuthFail(msg) {
+  localStorage.removeItem('fc');
+  if (state.ws) { state.ws.onclose = null; try { state.ws.close(); } catch (e) {} state.ws = null; }
+  state = { user_id: null, token: null, name: null, friends: [], active: null, ws: null, lastId: 0 };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('auth').style.display = 'block';
+  showErr(msg || 'Сессия мерзімі өтті. Қайта кіріңіз.');
 }
 
 async function register() {
@@ -289,7 +300,11 @@ function connectWs() {
     }
     state.lastId = Math.max(state.lastId, m.id);
   };
-  ws.onclose = () => setTimeout(connectWs, 3000);
+  ws.onclose = (ev) => {
+    // 4001 = сервер токенді қабылдамады (жарамсыз/ескі токен)
+    if (ev.code === 4001) { handleAuthFail('Токен жарамсыз. Қайта кіріңіз.'); return; }
+    setTimeout(connectWs, 3000);
+  };
 }
 
 // ---------- init ----------
