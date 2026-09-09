@@ -13,13 +13,18 @@ Usage:
 """
 import json
 import os
+import re
 import sys
+import time
 import urllib.error
 import urllib.request
 
 CONFIG_DIR = os.path.expanduser("~/.friend")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 DEFAULT_SERVER = "http://localhost:8001"
+VERSION = "1.1.0"
+REPO_RAW = "https://raw.githubusercontent.com/Musa-505/friend-chat/main"
+UPDATE_CACHE = os.path.join(CONFIG_DIR, ".update_check")
 
 
 # ---------------------------------------------------------------- config
@@ -63,6 +68,63 @@ def api(method, path, data=None, token=None):
     except urllib.error.URLError as e:
         sys.exit(f"Не удалось подключиться к серверу ({server_url()}). "
                  f"Запустите: ~/code/friend-chat/run.sh\n{e.reason}")
+
+
+# ---------------------------------------------------------------- update
+def check_update(force=False):
+    """GitHub-та жаңа нұсқа бар ма? (сағатына бір рет тексереді)"""
+    if not force and os.path.exists(UPDATE_CACHE):
+        try:
+            if time.time() - os.path.getmtime(UPDATE_CACHE) < 3600:
+                return None
+        except Exception:
+            pass
+    try:
+        with urllib.request.urlopen(REPO_RAW + "/friend.py", timeout=10) as resp:
+            content = resp.read().decode()
+        m = re.search(r'VERSION\s*=\s*"([^"]+)"', content)
+        latest = m.group(1) if m else None
+    except Exception:
+        return None
+    try:
+        with open(UPDATE_CACHE, "w") as f:
+            f.write(latest or "")
+    except Exception:
+        pass
+    if latest and latest != VERSION:
+        return latest
+    return None
+
+
+def do_update():
+    """friend.py + daemon.py жаңа нұсқасын жүктеп, ауыстырады."""
+    base = os.path.dirname(os.path.abspath(__file__))
+    ok = True
+    for fname in ("friend.py", "daemon.py"):
+        try:
+            with urllib.request.urlopen(REPO_RAW + "/" + fname, timeout=15) as resp:
+                data = resp.read()
+            path = os.path.join(base, fname)
+            tmp = path + ".tmp"
+            with open(tmp, "wb") as f:
+                f.write(data)
+            os.replace(tmp, path)
+        except Exception as e:
+            print(f"⚠️ {fname} жаңарту сәтсіз: {e}")
+            ok = False
+    return ok
+
+
+def cmd_update():
+    latest = check_update(force=True)
+    if not latest:
+        print(f"Сізде ең жаңа нұсқа бар ({VERSION}).")
+        return
+    print(f"🔄 Жаңа нұсқа табылды: {VERSION} → {latest}")
+    if do_update():
+        print("✅ Жаңартылды! Команданы қайта орындаңыз.")
+    else:
+        sys.exit("Жаңарту сәтсіз аяқталды.")
 
 
 # ---------------------------------------------------------------- commands
@@ -160,6 +222,15 @@ def main():
         print(__doc__)
         return
     cmd = args[0]
+    # авто-жаңарту тексеру (update командасынан басқасында)
+    if cmd != "update":
+        try:
+            if check_update():
+                if do_update():
+                    print("🔄 Жаңа нұсқа орнатылды! Команданы қайта орындаңыз.")
+                    return
+        except Exception:
+            pass
     if cmd == "register":
         if len(args) < 2:
             sys.exit("Использование: friend.py register <имя>")
@@ -180,6 +251,8 @@ def main():
         cmd_whoami()
     elif cmd == "config":
         cmd_config(args[1] if len(args) > 1 else None)
+    elif cmd == "update":
+        cmd_update()
     else:
         sys.exit(f"Неизвестная команда: {cmd}\n\n{__doc__}")
 

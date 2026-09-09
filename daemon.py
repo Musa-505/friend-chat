@@ -21,6 +21,36 @@ CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
 LOG_PATH = os.path.join(CONFIG_DIR, "inbox.log")
 LAST_ID_PATH = os.path.join(CONFIG_DIR, "last_id")
 DEFAULT_SERVER = "http://localhost:8001"
+VERSION = "1.1.0"
+REPO_RAW = "https://raw.githubusercontent.com/Musa-505/friend-chat/main"
+
+
+def check_and_update():
+    """GitHub-та жаңа нұсқа болса, friend.py + daemon.py жаңартады."""
+    import re
+    try:
+        with urllib.request.urlopen(REPO_RAW + "/daemon.py", timeout=10) as resp:
+            content = resp.read().decode()
+        m = re.search(r'VERSION\s*=\s*"([^"]+)"', content)
+        latest = m.group(1) if m else None
+        if latest and latest != VERSION:
+            base = os.path.dirname(os.path.abspath(__file__))
+            for fname in ("friend.py", "daemon.py"):
+                try:
+                    with urllib.request.urlopen(REPO_RAW + "/" + fname, timeout=15) as r:
+                        data = r.read()
+                    path = os.path.join(base, fname)
+                    tmp = path + ".tmp"
+                    with open(tmp, "wb") as f:
+                        f.write(data)
+                    os.replace(tmp, path)
+                except Exception as e:
+                    print(f"⚠️ {fname} жаңарту сәтсіз: {e}", file=sys.stderr)
+            print(f"🔄 Жаңартылды ({VERSION} → {latest}).", file=sys.stderr)
+            return True
+    except Exception:
+        pass
+    return False
 
 
 def load_config():
@@ -68,6 +98,7 @@ def format_msg(m):
 
 
 async def run():
+    check_and_update()
     cfg = load_config()
     if "token" not in cfg:
         print("Нет конфигурации. Сначала: friend.py register <имя>", file=sys.stderr)
